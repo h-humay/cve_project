@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CVE Lookup Tool</title>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #FF69B4;
+      --secondary-color: #FFB6C1;
+      --accent-color: #FFC0CB;
+      --text-color: #4A4A4A;
+      --bg-color: #FFF5F7;
+    }
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 900px;
+      padding: 2rem;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .header p {
+      color: var(--text-color);
+      font-size: 1.1rem;
+    }
+    .search-box {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 2rem;
+    }
+    .form-control {
+      border: 2px solid var(--secondary-color);
+      border-radius: 10px;
+      padding: 0.75rem;
+      font-size: 1.1rem;
+    }
+    .form-control:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 0.2rem rgba(255, 105, 180, 0.25);
+    }
+    .btn-search {
+      background-color: var(--primary-color);
+      border: none;
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    .btn-search:hover {
+      background-color: #FF1493;
+      transform: translateY(-2px);
+    }
+    .result-card {
+      background: white;
+      border-radius: 15px;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .severity-badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+    .severity-critical {
+      background-color: #FFE5E5;
+      color: #FF0000;
+    }
+    .severity-high {
+      background-color: #FFF3E5;
+      color: #FF6B00;
+    }
+    .severity-medium {
+      background-color: #FFF9E5;
+      color: #FFB100;
+    }
+    .severity-low {
+      background-color: #E5FFE5;
+      color: #00B300;
+    }
+    .section {
+      margin-bottom: 1.5rem;
+    }
+    .section-title {
+      color: var(--primary-color);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      padding: 10px 20px;
+      border-radius: 15px;
+      border: px solid #ccc;
+      box-shadow: 2px 2px 10px rgb(0 0 0 / 5%);
+      background-color: #fefefe;
+    }
+    .reference-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.8rem;
+      padding: 8px;
+      background-color: var(--bg-color);
+      border-radius: 8px;
+      transition: all 0.2s ease;
+    }
+    .reference-link:hover {
+      color: #FF1493;
+      text-decoration: none;
+      transform: translateX(5px);
+      background-color: #FFE5F5;
+    }
+    .reference-link i {
+      font-size: 0.9em;
+    }
+    .references-loading {
+      text-align: center;
+      color: var(--text-color);
+      padding: 1rem;
+    }
+    .references-loading i {
+      color: var(--primary-color);
+      margin-right: 8px;
+    }
+    .date-info {
+      color: #666;
+      font-style: italic;
+    }
+    .exploit-item {
+      background-color: var(--bg-color);
+      padding: 0.75rem;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin: 2rem 0;
+    }
+    .loading img {
+      width: 50px;
+      height: 50px;
+    }
+    .error-message {
+      color: #FF0000;
+      background-color: #FFE5E5;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      display: none;
+    }
+    .save-options {
+      display: none;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .save-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .save-btn:hover {
+      background-color: #FF1493;
+      transform: translateY(-2px);
+    }
+    .save-btn i {
+      margin-right: 5px;
+    }
+    .success-message {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .cve-id-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      background-color: var(--bg-color);
+      transform: scale(1.1);
+    }
+    .copy-success {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      animation: fadeOut 2s forwards;
+    }
+    @keyframes fadeOut {
+      0% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>CVE Lookup Tool</h1>
+      <p>Search for CVE details with a pretty interface!</p>
+    </div>
+
+    <div class="search-box">
+      <div class="mb-3">
+        <input type="text" class="form-control" id="cve-input" placeholder="Enter CVE ID (e.g., CVE-2017-0144)">
+      </div>
+      <div class="text-center">
+        <button class="btn btn-search" onclick="searchCVE()">Search 🔍</button>
+      </div>
+      <div class="error-message" id="error-message"></div>
+    </div>
+
+    <div class="loading" id="loading">
+      <img src="https://i.gifer.com/ZKZx.gif" alt="Loading...">
+      <p>Searching for CVE details...</p>
+    </div>
+
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <h2 id="cve-id"> </h2>
+        <span class="severity-badge" id="severity-badge"></span>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Description</h3>
+        <p id="description"></p>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Source</h3>
+        <span id="description-source">Unknown</span>
+      </div>
+      
+
+      <div class="section">
+        <h3 class="section-title">CVSS Score</h3>
+        <p id="cvss-score"></p>
+        <p style="font-family: monospace;">Vector: <span id="cvss-vector"></span></p>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Dates</h3>
+        <p><strong>Published:</strong> <span id="published-date">Not available</span></p>
+        <p><strong>Updated:</strong> <span id="updated-date">Not available</span></p>
+      </div>
+      <div class="section">
+        <h3 class="section-title">Vulnerability Category</h3>
+        <p><strong>Category:</strong> <span id="cve-cat"></span></p>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">References</h3>
+        <div id="references">
+          <div class="references-loading" style="display: none;">
+            <p><i class="fas fa-spinner fa-spin"></i> Searching and verifying references...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Exploit DB Section -->
+      <div class="section">
+        <h3 class="section-title">Exploit DB Results</h3>
+        <div id="exploit-table">
+          <p>Loading exploit data...</p>
+        </div>
+      </div>
+
+      <div class="section" style="text-align: center;">
+        <h3 class="section-title">Save Report</h3>
+        <div class="save-buttons" style="display: flex; justify-content: center; gap: 10px; margin-top: 15px;">
+          <button onclick="saveReport('html')" class="save-btn">
+            <i class="fas fa-file-code"></i> Save as HTML
+          </button>
+          <button onclick="saveReport('pdf')" class="save-btn">
+            <i class="fas fa-file-pdf"></i> Save as PDF
+          </button>
+          <button onclick="saveReport('txt')" class="save-btn">
+            <i class="fas fa-file-alt"></i> Save as TXT
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentCVEData = null;
+
+    function searchCVE() {
+    const cveId = document.getElementById('cve-input').value.trim();
+    const loading = document.getElementById('loading');
+    const resultCard = document.getElementById('result-card');
+    const errorMessage = document.getElementById('error-message');
+    const referencesDiv = document.getElementById('references');
+    const exploitDiv = document.getElementById('exploit-table');
+
+    // Reset display
+    loading.style.display = 'block';
+    resultCard.style.display = 'none';
+    errorMessage.style.display = 'none';
+    referencesDiv.innerHTML = `
+        <div class="references-loading">
+            <p><i class="fas fa-spinner fa-spin"></i> Searching and verifying references...</p>
+        </div>
+    `;
+    exploitDiv.innerHTML = `<p>Loading exploit data...</p>`;
+
+    // Send request
+    fetch('/search', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `cve_id=${encodeURIComponent(cveId)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        loading.style.display = 'none';
+
+        if (data.error) {
+            errorMessage.textContent = data.error;
+            errorMessage.style.display = 'block';
+            return;
+        }
+
+        // Store the current CVE data
+        currentCVEData = data;
+
+        // Update result card
+        document.getElementById('cve-id').textContent = data.id;
+        document.getElementById('cve-cat').textContent = data.category;
+        document.getElementById('description').textContent = data.description;
+        document.getElementById('description-source').textContent = data.source || 'Unknown';
+        document.getElementById('cvss-score').textContent = data.cvss_score;
+        document.getElementById('cvss-vector').textContent = data.vector;
+        document.getElementById('published-date').textContent = data.published_date || 'Not available';
+        document.getElementById('updated-date').textContent = data.updated_date || 'Not available';
+
+        // Update severity badge
+        const severityBadge = document.getElementById('severity-badge');
+        severityBadge.textContent = data.severity.toUpperCase();
+        severityBadge.className = `severity-badge severity-${data.severity}`;
+
+        // Update references
+        if (data.references && data.references.length > 0) {
+            // First create a button to open all links
+            referencesDiv.innerHTML = `
+                <button id="openAllLinks" class="btn btn-search mb-3">Open All References</button>
+                <div id="referencesList">
+                    ${data.references.map(ref => `
+                        <a href="${ref}" class="reference-link" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-external-link-alt"></i>
+                            ${ref}
+                        </a>
+                    `).join('')}
+                </div>
+            `;
+
+            // Add click handler for the button
+            document.getElementById('openAllLinks').addEventListener('click', function() {
+                data.references.forEach(ref => {
+                    window.open(ref, '_blank');
+                });
+            });
+
+            // Automatically trigger the click after a short delay
+            setTimeout(() => {
+                document.getElementById('openAllLinks').click();
+            }, 500);
+        } else {
+            referencesDiv.innerHTML = '<p>No working references found.</p>';
+        }
+
+        // Update exploit table section
+        exploitDiv.innerHTML = data.exploit_table || '<p>No exploit data available.</p>';
+
+        resultCard.style.display = 'block';
+        document.querySelector('.save-buttons').style.display = 'flex';
+        document.querySelectorAll('.section-title').forEach(title => {
+            title.style.display = 'block';
+        });
+    })
+    .catch(error => {
+        loading.style.display = 'none';
+        errorMessage.textContent = 'An error occurred while fetching the data. Please try again.';
+        errorMessage.style.display = 'block';
+        console.error('Error:', error);
+    });
+}
+
+function saveReport(format) {
+    if (!currentCVEData) {
+        alert('No CVE data to save. Please search for a CVE first.');
+        return;
+    }
+
+    // Send request to save report
+    fetch(`/save_report?format=${format}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(currentCVEData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.error) {
+            alert('Error saving report: ' + data.error);
+            return;
+        }
+        
+        // Create a temporary link to download the file
+        const link = document.createElement('a');
+        link.href = `/download_report/${encodeURIComponent(data.filename)}`;
+        link.download = data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving report. Please try again.');
+    });
+}
+
+    document.getElementById('cve-input').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchCVE();
+      }
+    });
+  </script>
+</body>
+</html>
